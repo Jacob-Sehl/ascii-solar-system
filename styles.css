@@ -40,3 +40,29 @@ p {
     color: inherit;
 }
 
+@keyframes slowFade {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes flare {
+    0%, 100% { color: #fff; }
+    50% { color: #ff0; }
+}
+
+.sparkling {
+    animation: sparklingChar 10s infinite;
+}
+
+.fadeBlinking {
+    animation: fadeBlinkingChar 10s infinite;
+}
+
+.slowFading {
+    animation: slowFadingChar 10s infinite;
+}
+
+.crtFilter {
+    opacity: 0.9;
+    filter:blur(0.2px) drop-shadow(0 0 3px rgba(255,255,255,0.8));
+}
