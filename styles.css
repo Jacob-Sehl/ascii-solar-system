@@ -50,16 +50,31 @@ p {
     50% { color: #ff0; }
 }
 
+@keyframes slowFadingChar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes sparklingChar {
+    0%, 100% { color: #fff; }
+    50% { color: #ff0; }
+}
+
+@keyframes fadeBlinkingChar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.1; }
+}
+
 .sparkling {
-    animation: sparklingChar 10s infinite;
+    animation: sparklingChar 1s infinite;
 }
 
 .fadeBlinking {
-    animation: fadeBlinkingChar 10s infinite;
+    animation: fadeBlinkingChar 2s infinite;
 }
 
 .slowFading {
-    animation: slowFadingChar 10s infinite;
+    animation: slowFadingChar 3s infinite;
 }
 
 .crtFilter {
