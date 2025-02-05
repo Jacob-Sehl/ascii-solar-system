@@ -5,10 +5,10 @@ const wrapper = document.getElementById("wrapper");
 const artContainer = document.getElementById("artContainer");
 
 //Basic setup Constants
-const charWidth = 7;
-const charHeight = 15;
-const artWidth = Math.ceil(window.innerWidth / charWidth);
-const artHeight = Math.ceil(window.innerHeight / charHeight);
+const charWidth = 5;
+const charHeight = 8;
+let artWidth = Math.ceil(window.innerWidth / charWidth);
+let artHeight = Math.ceil(window.innerHeight / charHeight);
 const gameSpeed = 0.025;
 
 // Celestial Body sizes
@@ -44,7 +44,14 @@ const updateLayer = new Map();
 
 //Creates the initial update
 function initialUpdate() {
-    // Generates empty space
+    // Clear existing content
+    artContainer.innerHTML = '';
+    
+    // Recalculate dimensions
+    artWidth = Math.ceil(window.innerWidth / charWidth);
+    artHeight = Math.ceil(window.innerHeight / charHeight);
+    
+    // Generates empty space - only for visible area
     for (let i = 0; i < artWidth; i++) {
         const colContainer = document.createElement("div");
         colContainer.classList.add("column");
@@ -56,7 +63,11 @@ function initialUpdate() {
         }
         artContainer.insertAdjacentElement("beforeend", colContainer);
     }
-    //Star Field Generator
+
+    // Clear existing layers
+    layers.forEach(layer => layer.clear());
+    
+    //Star Field Generator - only for visible area
     for (let i = 0; i < artWidth; i++) {
         for (let j = 0; j < artHeight; j++) {
             if (noise.simplex2(i,j) > 0.85) {
@@ -164,21 +175,21 @@ function update(timestamp) {
 
 // Modify the window load handler to use only requestAnimationFrame
 window.addEventListener('DOMContentLoaded', function() {
-    // Get wrapper and main container
-    const wrapper = document.getElementById("wrapper");
-    const artContainer = document.getElementById("artContainer");
-    
+    // Get wrapper and main container - these are already defined above, so we can remove these lines
     if (!wrapper || !artContainer) {
         console.error('Required DOM elements not found');
         return;
     }
-
-    //Basic setup Constants
-    const charWidth = 7;
-    const charHeight = 15;
-    const artWidth = Math.ceil(window.innerWidth / charWidth);
-    const artHeight = Math.ceil(window.innerHeight / charHeight);
     
     initialUpdate();
     requestAnimationFrame(update);
+});
+
+// Add window resize handler
+window.addEventListener('resize', function() {
+    // Debounce the resize event
+    if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(function() {
+        initialUpdate();
+    }, 250);
 });

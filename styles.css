@@ -50,6 +50,8 @@ p {
     white-space: pre;
     display: inline-block;
     color: inherit;
+    font-size: 10px;
+    line-height: 1;
 }
 
 @keyframes slowFade {
