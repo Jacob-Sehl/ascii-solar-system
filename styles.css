@@ -141,13 +141,14 @@ body {
 }
 
 .fadeBlinking {
-    animation: fadeBlinkingChar 2s infinite;
+    opacity: 1;
+    animation: fadeBlinkingChar 8s infinite;
 }
 
 .slowFading {
     animation: slowFadingChar 3s infinite;
 }
-
+/*
 .crtFilter {
     opacity: 0.9;
     filter: blur(0.2px) drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
@@ -171,9 +172,9 @@ body {
     );
     z-index: 1;
 }
+*/
 
 
-/*
 .crtFilter {
     opacity: 0.9;
     filter: blur(0.2px) drop-shadow(0 0 3px rgba(255,255,255,0.8));
@@ -188,14 +189,51 @@ body {
     pointer-events: none;
     background: repeating-linear-gradient(
         0deg,
-        rgba(0,0,0, 0.20),
-        rgba(0,0,0, 0.20) 2px,
+        rgba(0,0,0, 0.15),
+        rgba(0,0,0, 0.15) 2px,
         transparent 2px,
         transparent 4px
     );
 }
-*/
+
+
+@keyframes glowingSun {
+    0%, 100% {
+        text-shadow: 
+            0 0 3px white, 
+            0 0 5px white, 
+            0 0 8px white, 
+            0 0 10px white, 
+            0 0 15px white, 
+            0 0 20px white;
+    }
+    50% {
+        text-shadow: 
+            0 0 5px white, 
+            0 0 10px white, 
+            0 0 15px white, 
+            0 0 20px white, 
+            0 0 25px white, 
+            0 0 30px white;
+    }
+}
 
 .glow {
-    text-shadow: 0 0 5px #ff0, 0 0 10px #ff0, 0 0 15px #ff0, 0 0 20px #ff0;
+    animation: glowingSun 2s infinite alternate;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.sunFading {
+    animation: glowingSun 2s infinite alternate, fadeInOut 2s infinite; /* Adjust duration as needed */
 }

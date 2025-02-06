@@ -5,10 +5,10 @@ const wrapper = document.getElementById("wrapper");
 const artContainer = document.getElementById("artContainer");
 
 //Basic setup Constants
-const charWidth = 7;
-const charHeight = 15;
-const artWidth = Math.ceil(window.innerWidth / charWidth);
-const artHeight = Math.ceil(window.innerHeight / charHeight);
+const charWidth = 5;
+const charHeight = 8;
+const artWidth = Math.ceil(window.innerWidth / 7);
+const artHeight = Math.ceil(window.innerHeight / 15);
 const gameSpeed = 0.025;
 
 // Celestial Body sizes
@@ -138,8 +138,19 @@ function renderAscii() {
         // Update character
         domChar.innerText = update.char;
 
+        // Handle glow class
+        if (update.glow && !domChar.classList.contains('glow')) {
+            domChar.classList.add("glow"); // Add glow class for sun characters
+        } else if (!update.glow && domChar.classList.contains('glow')) {
+            domChar.classList.remove("glow"); // Remove glow class for other characters
+        }
+        if (update.sunFading && !domChar.classList.contains('sunFading')) {
+            domChar.classList.add("sunFading"); // Adds sunfading for interior sun chars
+        } else if (!update.sunFading && domChar.classList.contains('sunFading')) {
+            domChar.classList.remove("sunFading"); // Removes sunfade
+        }
+
         // ANIMATION HANDLER
-        
         // Slow Fade
         if (update.slowFading && !domChar.classList.contains("slowFading")) {
             domChar.classList.add("slowFading");
@@ -160,7 +171,7 @@ function renderAscii() {
         }
         // Animation delay
         if (update.animationDelay && domChar.style.animationDelay == "") {
-            domChar.style.animationDelay = update.animationDelay+"s";
+            domChar.style.animationDelay = update.animationDelay + "s";
         } else if (!update.animationDelay && domChar.style.animationDelay != "") {
             domChar.style.animationDelay = "";
         }
@@ -180,37 +191,46 @@ function updateAscii(dt) {
 
     // Create the sun over a specified grid
     for (let i = 0; i < sunSize; i++) {
-        for (let j = 0; j < sunSize*0.5; j++) {
-            const distance = (i - sunSize*0.5) ** 2 + (j*2 + 0.5 - sunSize*0.5) ** 2;
+        for (let j = 0; j < sunSize * 0.5; j++) {
+            const distance = (i - sunSize * 0.5) ** 2 + (j * 2 + 0.5 - sunSize * 0.5) ** 2;
 
             let curChar = "?";
-            if (i == 1 || i == sunSize-1) {
-                (Math.abs(j - sunSize*0.25) > 1)
+            if (i == 1 || i == sunSize - 1) {
+                (Math.abs(j - sunSize * 0.25) > 1)
                     ? curChar = "|"
                     : curChar = "H";
-            } else if (j == 0 || j == sunSize*0.5-0.5)
-                (Math.abs(i - sunSize*0.5) > 1)
+            } else if (j == 0 || j == sunSize * 0.5 - 0.5)
+                (Math.abs(i - sunSize * 0.5) > 1)
                     ? curChar = "-"
                     : curChar = "=";
             else {
-                const isTopHalf = j < sunSize*0.25;
-                ((isTopHalf && i < sunSize*0.5) || (!isTopHalf && i > sunSize*0.5))
+                const isTopHalf = j < sunSize * 0.25;
+                ((isTopHalf && i < sunSize * 0.5) || (!isTopHalf && i > sunSize * 0.5))
                 ? curChar = "/"
                 : curChar = "\\";
             }
 
-            const x = Math.ceil(sunCenterx + i-sunSize*0.5);
-            const y = Math.ceil(sunCentery + j-sunSize*0.25);
+            const x = Math.ceil(sunCenterx + i - sunSize * 0.5);
+            const y = Math.ceil(sunCentery + j - sunSize * 0.25);
             if (x >= 0 && x < artWidth && y >= 0 && y < artHeight && distance <= sunSizeSq) {
-                if (distance <= sunSizeSq - sunSize)
-                    curChar = " ";
-
-                layers[Enums.Layers.Sun].set(`x${x}y${y}`, {
-                    x: x,
-                    y: y,
-                    char: curChar,
-                    glow: true
-                });
+                if (distance <= sunSizeSq - sunSize) {
+                    curChar = (i + j) % 2 === 0 ? "~" : " "; // Alternating characters for burning effect
+                    // Add slowFading to the ~ character
+                    layers[Enums.Layers.Sun].set(`x${x}y${y}`, {
+                        x: x,
+                        y: y,
+                        char: curChar,
+                        fadeBlinking: curChar === "~", // Only add slowFading for ~ character
+                        animationDelay: Math.random()*10
+                    });
+                } else {
+                    layers[Enums.Layers.Sun].set(`x${x}y${y}`, {
+                        x: x,
+                        y: y,
+                        char: curChar,
+                        glow: false
+                    });
+                }
             }
         }
     }
@@ -221,7 +241,7 @@ function updateAscii(dt) {
     }
 
     // Animate stars
-    for (let [key,star] of layers[Enums.Layers.Stars].entries()) {
+    for (let [key, star] of layers[Enums.Layers.Stars].entries()) {
         if (noise.simplex3(star.x, star.y, time) > 0.08) {
             layers[Enums.Layers.Stars].set(key, {
                 x: star.x,
@@ -229,7 +249,7 @@ function updateAscii(dt) {
                 char: '*',
                 slowFading: true,
                 animationDelay: star.animationDelay
-            })
+            });
             updateLayer.set(key, {
                 x: star.x,
                 y: star.y,
@@ -244,7 +264,7 @@ function updateAscii(dt) {
                 char: ".",
                 slowFading: true,
                 animationDelay: star.animationDelay 
-            })
+            });
             updateLayer.set(key, {
                 x: star.x,
                 y: star.y,
@@ -254,7 +274,6 @@ function updateAscii(dt) {
             });
         }
     }
-
 }
 
 // ANIMATION LOOP
