@@ -149,7 +149,7 @@ body {
 .slowFading {
     animation: slowFadingChar 3s infinite;
 }
-/*
+
 .crtFilter {
     opacity: 0.9;
     filter: blur(0.2px) drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
@@ -173,9 +173,9 @@ body {
     );
     z-index: 1;
 }
-*/
 
 
+/*
 .crtFilter {
     opacity: 0.9;
     filter: blur(0.2px) drop-shadow(0 0 3px rgba(255,255,255,0.8));
@@ -196,7 +196,7 @@ body {
         transparent 4px
     );
 }
-
+*/
 
 @keyframes glowingSun {
     0%, 100% {
