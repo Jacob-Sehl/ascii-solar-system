@@ -12,7 +12,7 @@ const artHeight = Math.ceil(window.innerHeight / charHeight);
 const gameSpeed = 0.025;
 
 // Celestial Body sizes
-const sunSize = 15;
+const sunSize = 19;
 const sunSizeSq = (sunSize*0.5)**2;
 
 //Initialize noise
@@ -168,41 +168,36 @@ function updateAscii(dt) {
 
     // Create the sun over a specified grid
     for (let i = 0; i < sunSize; i++) {
-        for (let j = 0; j < sunSize; j++) {
-            const dx = i - sunSize * 0.5;
-            const dy = j - sunSize * 0.5;
-            const distance = dx * dx + dy * dy;
+        for (let j = 0; j < sunSize*0.5; j++) {
+            const distance = (i - sunSize*0.5) ** 2 + (j*2 + 0.5 - sunSize*0.5) ** 2;
 
-            if (distance <= sunSizeSq) {
-                let curChar = "*"; // Default sun texture
+            let curChar = "?";
+            if (i == 1 || i == sunSize-1) {
+                (Math.abs(j - sunSize*0.25) > 1)
+                    ? curChar = "|"
+                    : curChar = "H";
+            } else if (j == 0 || j == sunSize*0.5-0.5)
+                (Math.abs(i - sunSize*0.5) > 1)
+                    ? curChar = "-"
+                    : curChar = "=";
+            else {
+                const isTopHalf = j < sunSize*0.25;
+                ((isTopHalf && i < sunSize*0.5) || (!isTopHalf && i > sunSize*0.5))
+                ? curChar = "/"
+                : curChar = "\\";
+            }
 
-                // Sets different regions of sun chars
-                if (distance <= sunSizeSq * 0.3) {
-                    curChar = 'O';
-                } else if (distance <= sunSizeSq * 0.7) {
-                    curChar = '#';
-                } else {
-                    curChar = '@';
-                }
+            const x = Math.ceil(sunCenterx + i-sunSize*0.5);
+            const y = Math.ceil(sunCentery + j-sunSize*0.25);
+            if (x >= 0 && x < artWidth && y >= 0 && y < artHeight && distance <= sunSizeSq) {
+                if (distance <= sunSizeSq - sunSize)
+                    curChar = " ";
 
-                // Adds solar flare using noise
-                if (noise.simplex3(i * 0.2, j * 0.2, time * 0.1) > 0.7) {
-                    curChar = '~';
-                }
-
-                const x = Math.ceil(sunCenterx + dx);
-                const y = Math.ceil(sunCentery + dy);
-
-                if (x >= 0 && x < artWidth && y >= 0 && y < artHeight) {
-                    const key = `x${x}y${y}`;
-                    const sunPixel = {
-                        x: x,
-                        y: y,
-                        char: curChar
-                    };
-                    layers[Enums.Layers.Sun].set(key, sunPixel);
-                    updateLayer.set(key, sunPixel);
-                }
+                layers[Enums.Layers.Sun].set(`x${x}y${y}`, {
+                    x: x,
+                    y: y,
+                    char: curChar
+                });
             }
         }
     }
