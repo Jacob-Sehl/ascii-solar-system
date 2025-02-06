@@ -6,9 +6,9 @@ const artContainer = document.getElementById("artContainer");
 
 //Basic setup Constants
 const charWidth = 5;
-const charHeight = 8;
-const artWidth = Math.ceil(window.innerWidth / 7);
-const artHeight = Math.ceil(window.innerHeight / 15);
+const charHeight = 9;
+const artWidth = Math.ceil(window.innerWidth / charWidth);
+const artHeight = Math.ceil(window.innerHeight / charHeight);
 const gameSpeed = 0.025;
 
 // Celestial Body sizes
@@ -228,7 +228,7 @@ function updateAscii(dt) {
                         x: x,
                         y: y,
                         char: curChar,
-                        glow: false
+                        glow: true
                     });
                 }
             }
