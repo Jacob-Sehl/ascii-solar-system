@@ -139,17 +139,29 @@ function renderAscii() {
         domChar.innerText = update.char;
 
         // ANIMATION HANDLER
+        
         // Slow Fade
         if (update.slowFading && !domChar.classList.contains("slowFading")) {
             domChar.classList.add("slowFading");
         } else if (!update.slowFading && domChar.classList.contains("slowFading")) {
             domChar.classList.remove("slowFading");
         }
-
-        // Check for animation delay
-        if (update.animationDelay) {
-            domChar.style.animationDelay = update.animationDelay + "s";
-        } else {
+        // Sparkling
+        if (update.sparkling && !domChar.classList.contains('sparkling')) {
+            domChar.classList.add("sparkling");
+        } else if (!update.sparkling && domChar.classList.contains("sparkling")) {
+            domChar.classList.remove("sparkling");
+        }
+        // Fade Blinking
+        if (update.fadeBlinking && !domChar.classList.contains('fadeBlinking')) {
+            domChar.classList.add("fadeBlinking");
+        } else if (!update.fadeBlinking && domChar.classList.contains("fadeBlinking")) {
+            domChar.classList.remove("fadeBlinking");
+        }
+        // Animation delay
+        if (update.animationDelay && domChar.style.animationDelay == "") {
+            domChar.style.animationDelay = update.animationDelay+"s";
+        } else if (!update.animationDelay && domChar.style.animationDelay != "") {
             domChar.style.animationDelay = "";
         }
     }
