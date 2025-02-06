@@ -196,7 +196,8 @@ function updateAscii(dt) {
                 layers[Enums.Layers.Sun].set(`x${x}y${y}`, {
                     x: x,
                     y: y,
-                    char: curChar
+                    char: curChar,
+                    glow: true
                 });
             }
         }
