@@ -5,10 +5,10 @@ const wrapper = document.getElementById("wrapper");
 const artContainer = document.getElementById("artContainer");
 
 //Basic setup Constants
-const charWidth = 5;
-const charHeight = 8;
-let artWidth = Math.ceil(window.innerWidth / charWidth);
-let artHeight = Math.ceil(window.innerHeight / charHeight);
+const charWidth = 7;
+const charHeight = 15;
+const artWidth = Math.ceil(window.innerWidth / charWidth);
+const artHeight = Math.ceil(window.innerHeight / charHeight);
 const gameSpeed = 0.025;
 
 // Celestial Body sizes
@@ -44,14 +44,9 @@ const updateLayer = new Map();
 
 //Creates the initial update
 function initialUpdate() {
-    // Clear existing content
-    artContainer.innerHTML = '';
+    const updateLayer = new Map();
     
-    // Recalculate dimensions
-    artWidth = Math.ceil(window.innerWidth / charWidth);
-    artHeight = Math.ceil(window.innerHeight / charHeight);
-    
-    // Generates empty space - only for visible area
+    // Generates empty space
     for (let i = 0; i < artWidth; i++) {
         const colContainer = document.createElement("div");
         colContainer.classList.add("column");
@@ -63,64 +58,98 @@ function initialUpdate() {
         }
         artContainer.insertAdjacentElement("beforeend", colContainer);
     }
-
-    // Clear existing layers
-    layers.forEach(layer => layer.clear());
     
-    //Star Field Generator - only for visible area
+    // Star Field Generator
     for (let i = 0; i < artWidth; i++) {
         for (let j = 0; j < artHeight; j++) {
-            if (noise.simplex2(i,j) > 0.85) {
+            if (noise.simplex2(i, j) > 0.85) {
                 const newStar = {
                     x: i,
                     y: j,
                     char: ".",
                     slowFading: true,
-                    animationDelay: Math.random()*20
+                    animationDelay: Math.random() * 20
                 };
                 const key = `x${i}y${j}`;
                 layers[Enums.Layers.Stars].set(key, newStar);
-                updateLayer.set(key,newStar);
+                updateLayer.set(key, newStar);
             }
         }
     }
 }
 
+function getLowerCharacter(x,y, layerIndex) {
+    for (let i = layerIndex-1; i >= 0; i--) {
+        const key = `x${x}y${y}`;
+        if (layers[i].has(key)) {
+            return layers[i].get(key).char;
+        }
+    }
+    return " ";
+}
+
+function hasHigherChar(x,y, layerIndex) {
+    for (let i = layerIndex+1; i < layers.length; i++) {
+        const key = `x${x}y${y}`;
+        if (layers[i].has(key)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+
 // Render changes
 function renderAscii() {
-    //DOM update
+    const updatedLayers = [
+        Enums.Layers.Stars,
+        Enums.Layers.Sun,
+        Enums.Layers.Planets,
+        Enums.Layers.Orbits,
+        Enums.Layers.Effects
+    ];
+
+    // Flatten layers
+    for (let i = 0; i < updatedLayers.length; i++) {
+        for (let key of layers[updatedLayers[i]].keys()) {
+            const e = layers[updatedLayers[i]].get(key);
+            if (!hasHigherChar(e.x, e.y, updatedLayers[i])) {
+                if (e.char == "remove") {
+                    updateLayer.set(key, {
+                        x: e.x,
+                        y: e.y,
+                        char: getLowerCharacter(e.x, e.y, updatedLayers[i])
+                    });
+                    layers[updatedLayers[i]].delete(key);
+                } else {
+                    updateLayer.set(key, e);
+                }
+            }
+        }
+    }
+
+    // DOM update
     for (let key of updateLayer.keys()) {
-        // Get the update and the character element
         const update = updateLayer.get(key);
         const domChar = document.getElementById(key);
 
         // Update character
         domChar.innerText = update.char;
-        
-        // ANIMATION HANDLER
 
+        // ANIMATION HANDLER
         // Slow Fade
         if (update.slowFading && !domChar.classList.contains("slowFading")) {
             domChar.classList.add("slowFading");
         } else if (!update.slowFading && domChar.classList.contains("slowFading")) {
             domChar.classList.remove("slowFading");
         }
-        // Sparkling
-        if (update.sparkling && !domChar.classList.contains('sparkling')) {
-            domChar.classList.add("sparkling");
-        } else if (!update.sparkling && domChar.classList.contains("sparkling")) {
-            domChar.classList.remove("sparkling");
-        }
-        // Fade Blinking
-        if (update.fadeBlinking && !domChar.classList.contains('fadeBlinking')) {
-            domChar.classList.add("fadeBlinking");
-        } else if (!update.fadeBlinking && domChar.classList.contains("fadeBlinking")) {
-            domChar.classList.remove("fadeBlinking");
-        }
-        // Animation delay
-        if (update.animationDelay && domChar.style.animationDelay == "") {
-            domChar.style.animationDelay = update.animationDelay+"s";
-        } else if (!update.animationDelay && domChar.style.animationDelay != "") {
+
+        // Check for animation delay
+        if (update.animationDelay) {
+            domChar.style.animationDelay = update.animationDelay + "s";
+        } else {
             domChar.style.animationDelay = "";
         }
     }
@@ -130,9 +159,69 @@ function updateAscii(dt) {
     // Update time
     time += gameSpeed * dt;
 
-    // Update starfield
+    // Clear old sun positions
+    layers[Enums.Layers.Sun].clear();
+
+    // Set the center of the sun
+    const sunCenterx = Math.floor(artWidth / 2);
+    const sunCentery = Math.floor(artHeight / 2);
+
+    // Create the sun over a specified grid
+    for (let i = 0; i < sunSize; i++) {
+        for (let j = 0; j < sunSize; j++) {
+            const dx = i - sunSize * 0.5;
+            const dy = j - sunSize * 0.5;
+            const distance = dx * dx + dy * dy;
+
+            if (distance <= sunSizeSq) {
+                let curChar = "*"; // Default sun texture
+
+                // Sets different regions of sun chars
+                if (distance <= sunSizeSq * 0.3) {
+                    curChar = 'O';
+                } else if (distance <= sunSizeSq * 0.7) {
+                    curChar = '#';
+                } else {
+                    curChar = '@';
+                }
+
+                // Adds solar flare using noise
+                if (noise.simplex3(i * 0.2, j * 0.2, time * 0.1) > 0.7) {
+                    curChar = '~';
+                }
+
+                const x = Math.ceil(sunCenterx + dx);
+                const y = Math.ceil(sunCentery + dy);
+
+                if (x >= 0 && x < artWidth && y >= 0 && y < artHeight) {
+                    const key = `x${x}y${y}`;
+                    const sunPixel = {
+                        x: x,
+                        y: y,
+                        char: curChar
+                    };
+                    layers[Enums.Layers.Sun].set(key, sunPixel);
+                    updateLayer.set(key, sunPixel);
+                }
+            }
+        }
+    }
+
+    // Ensure the sun is rendered consistently
+    for (let [key, sunPixel] of layers[Enums.Layers.Sun].entries()) {
+        updateLayer.set(key, sunPixel);
+    }
+
+    // Animate stars
     for (let [key,star] of layers[Enums.Layers.Stars].entries()) {
         if (noise.simplex3(star.x, star.y, time) > 0.08) {
+            layers[Enums.Layers.Stars].set(key, {
+                x: star.x,
+                y: star.y,
+                char: '*',
+                slowFading: true,
+                animationDelay: star.animationDelay
+            })
             updateLayer.set(key, {
                 x: star.x,
                 y: star.y,
@@ -141,6 +230,13 @@ function updateAscii(dt) {
                 animationDelay: star.animationDelay
             });
         } else {
+            layers[Enums.Layers.Stars].set(key, {
+                x: star.x,
+                y: star.y,
+                char: ".",
+                slowFading: true,
+                animationDelay: star.animationDelay 
+            })
             updateLayer.set(key, {
                 x: star.x,
                 y: star.y,
@@ -150,46 +246,43 @@ function updateAscii(dt) {
             });
         }
     }
+
 }
 
 // ANIMATION LOOP
-let time = 0;
+let time = Math.random()*(artWidth+sunSize*2);
 let last = performance.now() / 1000;
 
 function update(timestamp) {
+    
+     // Request next frame
+     requestAnimationFrame(update);
+
     // Calculate delta time
     const now = performance.now() /1000;
     const dt = now - last;
     last = now;
 
-    // Clears the layer for a new one
-    updateLayer.clear();
+
 
     // Updates and renders the ASCII
     updateAscii(dt);
     renderAscii();
-
-    // Request next frame
-    requestAnimationFrame(update);
 }
 
 // Modify the window load handler to use only requestAnimationFrame
-window.addEventListener('DOMContentLoaded', function() {
-    // Get wrapper and main container - these are already defined above, so we can remove these lines
-    if (!wrapper || !artContainer) {
-        console.error('Required DOM elements not found');
-        return;
-    }
-    
-    initialUpdate();
-    requestAnimationFrame(update);
-});
+ //   window.addEventListener('DOMContentLoaded', function() {
+   //     // Get wrapper and main container - these are already defined above, so we can remove these lines
+     //   if (!wrapper || !artContainer) {
+     //       console.error('Required DOM elements not found');
+       //     return;
+    //    }
+        
+    //    initialUpdate();
+    //    requestAnimationFrame(update);
+ //   });
 
-// Add window resize handler
-window.addEventListener('resize', function() {
-    // Debounce the resize event
-    if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
-    this.resizeTimeout = setTimeout(function() {
-        initialUpdate();
-    }, 250);
-});
+ window.onload = () => {
+    initialUpdate();
+    window.requestAnimationFrame(update);
+ }

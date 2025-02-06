@@ -1,29 +1,25 @@
 /* styles.css */
-body, html {
-    margin: 0;
+* {
     padding: 0;
-    background: black;
-    overflow: hidden;
+    margin: 0;
 }
 
 body {
-    width: 100vw;
+    width: calc(100vw + 30px);
     height: 100vh;
+    background: black;
+    overflow: hidden;
 }
 
 #wrapper {
     width: 100%;
     height: 100%;
     background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #artContainer {
     width: 100%;
     height: 100%;
-  
     margin: 0;
     padding: 0;
     line-height: 0;
@@ -32,27 +28,88 @@ body {
     color: white;
 
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
 }
 
-.column {
-    flex: 0 0 auto;
+#artContainer .column {
     display: inline-flex;
     line-height: initial;
     flex-direction: column;
 }
 
-p {
+#artContainer p {
     font-family: monospace;
     white-space: pre;
     display: inline-block;
     color: inherit;
-    font-size: 10px;
-    line-height: 1;
 }
+
+/*
+@keyframes sparklingChar {
+    0% {
+        opacity: 0.25;
+    }
+    25% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.25;
+    }
+    75% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.25;
+    }
+}
+
+@keyframes fadeBlinkingChar {
+    0% {
+        opacity: 1;
+    }
+    25% {
+        opacity: 0.25;
+    }
+    98% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes slowFadingChar {
+    0% {
+        opacity: 0.25;
+    }
+    25% {
+        opacity: 0.75;
+    }
+    50% {
+        opacity: 0.25;
+    }
+    75% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.25;
+    }
+}
+
+.sparkling {
+    opacity: 0.25;
+    animation: sparklingChar 10s infinite;
+}
+.fadeBlinking {
+    opacity: 1;
+    animation: fadeBlinkingChar 10s infinite;
+}
+.slowFading {
+    opacity: 0.25;
+    animation: slowFadingChar 20s infinite;
+}
+*/
 
 @keyframes slowFade {
     0%, 100% { opacity: 1; }
@@ -114,3 +171,27 @@ p {
     );
     z-index: 1;
 }
+
+
+/*
+.crtFilter {
+    opacity: 0.9;
+    filter: blur(0.2px) drop-shadow(0 0 3px rgba(255,255,255,0.8));
+}
+.crtFilter::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0, 0.20),
+        rgba(0,0,0, 0.20) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+}
+*/
