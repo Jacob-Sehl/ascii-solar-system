@@ -42,6 +42,12 @@ const layers = [
 // Add update layer for tracking changes
 const updateLayer = new Map();
 
+// Cache DOM elements to avoid repeated queries
+const domCache = new Map();
+
+// Track previous state to avoid unnecessary updates
+const previousState = new Map();
+
 //Creates the initial update
 function initialUpdate() {
     // Clear existing content
@@ -51,15 +57,22 @@ function initialUpdate() {
     artWidth = Math.ceil(window.innerWidth / charWidth);
     artHeight = Math.ceil(window.innerHeight / charHeight);
     
+    // Clear caches when resizing
+    domCache.clear();
+    previousState.clear();
+    
     // Generates empty space - only for visible area
     for (let i = 0; i < artWidth; i++) {
         const colContainer = document.createElement("div");
         colContainer.classList.add("column");
         for (let j = 0; j < artHeight; j++) {
             const charElement = document.createElement("p");
-            charElement.id = `x${i}y${j}`;
+            const key = `x${i}y${j}`;
+            charElement.id = key;
             charElement.innerText = " ";
             colContainer.insertAdjacentElement("beforeend", charElement);
+            // Cache DOM element reference
+            domCache.set(key, charElement);
         }
         artContainer.insertAdjacentElement("beforeend", colContainer);
     }
@@ -88,41 +101,72 @@ function initialUpdate() {
 
 // Render changes
 function renderAscii() {
-    //DOM update
+    //DOM update - only update what actually changed
     for (let key of updateLayer.keys()) {
-        // Get the update and the character element
+        // Get the update and the character element from cache
         const update = updateLayer.get(key);
-        const domChar = document.getElementById(key);
-
-        // Update character
-        domChar.innerText = update.char;
+        const domChar = domCache.get(key);
         
-        // ANIMATION HANDLER
+        if (!domChar) continue; // Skip if element not found
 
+        // Get previous state to compare
+        const prev = previousState.get(key);
+        
+        // Only update character if it changed
+        if (!prev || prev.char !== update.char) {
+            domChar.innerText = update.char;
+        }
+        
+        // ANIMATION HANDLER - only update classes if they actually changed
+        
         // Slow Fade
-        if (update.slowFading && !domChar.classList.contains("slowFading")) {
-            domChar.classList.add("slowFading");
-        } else if (!update.slowFading && domChar.classList.contains("slowFading")) {
-            domChar.classList.remove("slowFading");
+        const shouldHaveSlowFade = !!update.slowFading;
+        const hasSlowFade = domChar.classList.contains("slowFading");
+        if (shouldHaveSlowFade !== hasSlowFade) {
+            if (shouldHaveSlowFade) {
+                domChar.classList.add("slowFading");
+            } else {
+                domChar.classList.remove("slowFading");
+            }
         }
+        
         // Sparkling
-        if (update.sparkling && !domChar.classList.contains('sparkling')) {
-            domChar.classList.add("sparkling");
-        } else if (!update.sparkling && domChar.classList.contains("sparkling")) {
-            domChar.classList.remove("sparkling");
+        const shouldHaveSparkling = !!update.sparkling;
+        const hasSparkling = domChar.classList.contains('sparkling');
+        if (shouldHaveSparkling !== hasSparkling) {
+            if (shouldHaveSparkling) {
+                domChar.classList.add("sparkling");
+            } else {
+                domChar.classList.remove("sparkling");
+            }
         }
+        
         // Fade Blinking
-        if (update.fadeBlinking && !domChar.classList.contains('fadeBlinking')) {
-            domChar.classList.add("fadeBlinking");
-        } else if (!update.fadeBlinking && domChar.classList.contains("fadeBlinking")) {
-            domChar.classList.remove("fadeBlinking");
+        const shouldHaveFadeBlinking = !!update.fadeBlinking;
+        const hasFadeBlinking = domChar.classList.contains('fadeBlinking');
+        if (shouldHaveFadeBlinking !== hasFadeBlinking) {
+            if (shouldHaveFadeBlinking) {
+                domChar.classList.add("fadeBlinking");
+            } else {
+                domChar.classList.remove("fadeBlinking");
+            }
         }
-        // Animation delay
-        if (update.animationDelay && domChar.style.animationDelay == "") {
-            domChar.style.animationDelay = update.animationDelay+"s";
-        } else if (!update.animationDelay && domChar.style.animationDelay != "") {
-            domChar.style.animationDelay = "";
+        
+        // Animation delay - only update if changed
+        const delayValue = update.animationDelay ? update.animationDelay + "s" : "";
+        const currentDelay = domChar.style.animationDelay;
+        if (delayValue !== currentDelay) {
+            domChar.style.animationDelay = delayValue;
         }
+        
+        // Store current state for next comparison
+        previousState.set(key, {
+            char: update.char,
+            slowFading: update.slowFading,
+            sparkling: update.sparkling,
+            fadeBlinking: update.fadeBlinking,
+            animationDelay: update.animationDelay
+        });
     }
 }
 
@@ -130,21 +174,25 @@ function updateAscii(dt) {
     // Update time
     time += gameSpeed * dt;
 
-    // Update starfield
+    // Update starfield - only update stars that actually change
+    // Use a slower update rate for noise to reduce CPU usage
+    const noiseTime = Math.floor(time * 2) / 2; // Update at 2Hz instead of every frame
+    
     for (let [key,star] of layers[Enums.Layers.Stars].entries()) {
-        if (noise.simplex3(star.x, star.y, time) > 0.08) {
+        // Get previous state
+        const prev = previousState.get(key);
+        const prevChar = prev ? prev.char : null;
+        
+        // Calculate new state
+        const noiseValue = noise.simplex3(star.x, star.y, noiseTime);
+        const newChar = noiseValue > 0.08 ? '*' : '.';
+        
+        // Only add to updateLayer if character actually changed
+        if (prevChar !== newChar) {
             updateLayer.set(key, {
                 x: star.x,
                 y: star.y,
-                char: '*',
-                slowFading: true,
-                animationDelay: star.animationDelay
-            });
-        } else {
-            updateLayer.set(key, {
-                x: star.x,
-                y: star.y,
-                char: ".",
+                char: newChar,
                 slowFading: true,
                 animationDelay: star.animationDelay
             });
@@ -155,12 +203,22 @@ function updateAscii(dt) {
 // ANIMATION LOOP
 let time = 0;
 let last = performance.now() / 1000;
+let lastUpdateTime = 0;
+const targetFPS = 30; // Limit to 30 FPS to reduce CPU usage
+const frameInterval = 1 / targetFPS;
 
 function update(timestamp) {
     // Calculate delta time
-    const now = performance.now() /1000;
+    const now = performance.now() / 1000;
     const dt = now - last;
     last = now;
+
+    // Throttle updates to target FPS
+    if (now - lastUpdateTime < frameInterval) {
+        requestAnimationFrame(update);
+        return;
+    }
+    lastUpdateTime = now;
 
     // Clears the layer for a new one
     updateLayer.clear();
