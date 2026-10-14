@@ -4,6 +4,10 @@ A procedurally generated, animated night sky made of ASCII characters, built as 
 
 **[Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3422551960)** · **[Live demo](https://jacobsehl.com/ascii-solar-system/)**
 
+<p align="center">
+  <img src="docs/demo.gif" alt="Animated ASCII night sky with twinkling stars" width="600">
+</p>
+
 ## Traction
 
 ![Steam Workshop stats](docs/steam-stats.png)
